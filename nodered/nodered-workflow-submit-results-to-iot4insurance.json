@@ -1,0 +1,245 @@
+[{
+	"id": "290b14fd.725f2c",
+	"type": "tab",
+	"label": "Send Analysis Results to IoT4I",
+	"disabled": false,
+	"info": "This flow will retrieve analysis results from\na previously submitted `Send Job Request` flow,\nthen send those results to Watson IoT Platform\ninside our IoT4I service, allowing our driving\nbehavior shield to respond."
+}, {
+	"id": "e2cfe488.3e0a48",
+	"type": "inject",
+	"z": "290b14fd.725f2c",
+	"name": "sendAnalysisResultstoIoT4I_Inject",
+	"topic": "",
+	"payload": "",
+	"payloadType": "date",
+	"repeat": "",
+	"crontab": "",
+	"once": false,
+	"x": 180,
+	"y": 320,
+	"wires": [
+		["39c1fb8c.f1d6a4"]
+	]
+}, {
+	"id": "39c1fb8c.f1d6a4",
+	"type": "function",
+	"z": "290b14fd.725f2c",
+	"name": "Config",
+	"func": "msg.driverHostname = \"automotive.internetofthings.ibmcloud.com\";\nmsg.driverTenantId = \"FIX-ME\";\nmsg.driverJobId = \"FIX-ME\";\nmsg.iot4iHostname = \"iot4insurance-api-FIX-ME.mybluemix.net\";\nmsg.iot4iUsername = \"FIX-ME\";\nmsg.iot4iDeviceId = \"FIX-ME\";\n\nreturn msg;\n",
+	"outputs": 1,
+	"noerr": 0,
+	"x": 290,
+	"y": 420,
+	"wires": [
+		["aaecf77b.fcdea8"]
+	]
+}, {
+	"id": "7560fd06.8afbf4",
+	"type": "http request",
+	"z": "290b14fd.725f2c",
+	"name": "getTripSummaryList",
+	"method": "GET",
+	"ret": "obj",
+	"url": "https://{{driverHostname}}/driverinsights/drbresult/tripSummaryList?tenant_id={{driverTenantId}}&job_id={{driverJobId}}",
+	"tls": "19a9749d.90dd4b",
+	"x": 518,
+	"y": 236,
+	"wires": [
+		["55b7e8ec.bceb98"]
+	]
+}, {
+	"id": "5fb8ab56.91c714",
+	"type": "debug",
+	"z": "290b14fd.725f2c",
+	"name": "",
+	"active": true,
+	"console": "false",
+	"complete": "true",
+	"x": 769.5,
+	"y": 616,
+	"wires": []
+}, {
+	"id": "55b7e8ec.bceb98",
+	"type": "function",
+	"z": "290b14fd.725f2c",
+	"name": "extractTripUuid",
+	"func": "// msg.payload is an array of trip summaries, we\n// need to find the one that matches our job id.\nmsg.payload.forEach(function (tSummary) {\n    if (tSummary.job_id == msg.driverJobId)\n        msg.driverTripUuid = tSummary.id.trip_uuid;\n});\n\nreturn msg;",
+	"outputs": 1,
+	"noerr": 0,
+	"x": 525.5,
+	"y": 324,
+	"wires": [
+		["174fd487.e667db"]
+	]
+}, {
+	"id": "aaecf77b.fcdea8",
+	"type": "http request",
+	"z": "290b14fd.725f2c",
+	"name": "getJobList",
+	"method": "GET",
+	"ret": "obj",
+	"url": "https://{{driverHostname}}/driverinsights/jobcontrol/jobList?tenant_id={{driverTenantId}}",
+	"tls": "19a9749d.90dd4b",
+	"x": 477.5,
+	"y": 43,
+	"wires": [
+		["a98a4e7d.b413a"]
+	]
+}, {
+	"id": "a98a4e7d.b413a",
+	"type": "function",
+	"z": "290b14fd.725f2c",
+	"name": "extractJobId",
+	"func": "\nreturn msg;",
+	"outputs": 1,
+	"noerr": 0,
+	"x": 491.5,
+	"y": 133,
+	"wires": [
+		["7560fd06.8afbf4"]
+	]
+}, {
+	"id": "e80350aa.27078",
+	"type": "debug",
+	"z": "290b14fd.725f2c",
+	"name": "",
+	"active": true,
+	"console": "false",
+	"complete": "true",
+	"x": 669.5,
+	"y": 33,
+	"wires": []
+}, {
+	"id": "f6582af0.4a47f8",
+	"type": "debug",
+	"z": "290b14fd.725f2c",
+	"name": "",
+	"active": true,
+	"console": "false",
+	"complete": "true",
+	"x": 665.5,
+	"y": 109,
+	"wires": []
+}, {
+	"id": "174fd487.e667db",
+	"type": "http request",
+	"z": "290b14fd.725f2c",
+	"name": "getAnalysisResults",
+	"method": "GET",
+	"ret": "obj",
+	"url": "https://{{driverHostname}}/driverinsights/drbresult/trip?tenant_id={{driverTenantId}}&trip_uuid={{driverTripUuid}}",
+	"tls": "19a9749d.90dd4b",
+	"x": 518.5,
+	"y": 409,
+	"wires": [
+		["7b5ef01f.00854"]
+	]
+}, {
+	"id": "376e596f.0ce776",
+	"type": "debug",
+	"z": "290b14fd.725f2c",
+	"name": "",
+	"active": true,
+	"console": "false",
+	"complete": "true",
+	"x": 412.5,
+	"y": 730,
+	"wires": []
+}, {
+	"id": "c12ec154.06868",
+	"type": "ibmiot out",
+	"z": "290b14fd.725f2c",
+	"authentication": "quickstart",
+	"apiKey": "",
+	"outputType": "evt",
+	"deviceId": "MTUwMTI0OTgwNjYyMQ",
+	"deviceType": "0.17.5",
+	"eventCommandType": "test",
+	"format": "json",
+	"data": "{{payload}}",
+	"qos": 0,
+	"name": "IBM IoT",
+	"service": "quickstart",
+	"x": 794.5,
+	"y": 497,
+	"wires": []
+}, {
+	"id": "8f24d429.8526a8",
+	"type": "http request",
+	"z": "290b14fd.725f2c",
+	"name": "sendIoT4I",
+	"method": "POST",
+	"ret": "txt",
+	"url": "https://{{iot4iHostname}}/global/sendPayloadToMQTT/evt/wink/wink/wink",
+	"tls": "19a9749d.90dd4b",
+	"x": 639.5,
+	"y": 559,
+	"wires": [
+		["5fb8ab56.91c714"]
+	]
+}, {
+	"id": "cf630e98.067b8",
+	"type": "http request",
+	"z": "290b14fd.725f2c",
+	"name": "getCsrfToken",
+	"method": "GET",
+	"ret": "obj",
+	"url": "https://{{iot4iHostname}}/user",
+	"tls": "19a9749d.90dd4b",
+	"x": 257.5,
+	"y": 563,
+	"wires": [
+		["cf4d2b2e.f50258"]
+	]
+}, {
+	"id": "7b5ef01f.00854",
+	"type": "function",
+	"z": "290b14fd.725f2c",
+	"name": "extractAnalysisResults",
+	"func": "msg.analysisResults = msg.payload;\n\nreturn msg;",
+	"outputs": 1,
+	"noerr": 0,
+	"x": 445.5,
+	"y": 485,
+	"wires": [
+		["cf630e98.067b8"]
+	]
+}, {
+	"id": "cf4d2b2e.f50258",
+	"type": "function",
+	"z": "290b14fd.725f2c",
+	"name": "setCsrfToken",
+	"func": "msg.headers = {};\nmsg.headers['X-CSRF-Token'] = msg.responseCookies['XSRF-TOKEN'].value;\nmsg.cookies = msg.responseCookies;\n\nreturn msg;",
+	"outputs": 1,
+	"noerr": 0,
+	"x": 271.5,
+	"y": 668,
+	"wires": [
+		["376e596f.0ce776", "eb975995.21e8e8"]
+	]
+}, {
+	"id": "eb975995.21e8e8",
+	"type": "function",
+	"z": "290b14fd.725f2c",
+	"name": "flattenAnalysisResults",
+	"func": "msg.payload = {\n    usr: msg.iot4iUsername,\n    d: msg.analysisResults,\n    extra: {}\n};\n\nreturn msg;",
+	"outputs": 1,
+	"noerr": 0,
+	"x": 458.5,
+	"y": 619,
+	"wires": [
+		["8f24d429.8526a8"]
+	]
+}, {
+	"id": "19a9749d.90dd4b",
+	"type": "tls-config",
+	"z": "",
+	"name": "",
+	"cert": "",
+	"key": "",
+	"ca": "",
+	"certname": "",
+	"keyname": "",
+	"caname": "",
+	"verifyservercert": false
+}]
